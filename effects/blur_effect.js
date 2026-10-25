@@ -4,6 +4,7 @@ import Shell from 'gi://Shell';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
 import Clutter from 'gi://Clutter';
+import Cogl from 'gi://Cogl';
 
 const getTintShaderSource = (extensionDir) => {
   const SHADER_PATH = GLib.build_filenamev([
@@ -45,10 +46,30 @@ export const BlurEffect = GObject.registerClass(
 
     preload(path) {
       // set shader source
-      this._source = getTintShaderSource(path);
-      if (this._source) this.set_shader_source(this._source);
+      if (typeof this.set_shader_source === 'function') {
+        this._source = getTintShaderSource(path);
+        if (this._source) this.set_shader_source(this._source);
+      }
 
       this.update_enabled();
+    }
+
+    vfunc_get_static_snippet() {
+      return Cogl.Snippet.new(
+        Cogl.SnippetHook.FRAGMENT,
+        `
+        uniform float red;
+        uniform float green;
+        uniform float blue;
+        uniform float blend;
+        `,
+        `
+        vec3 pix_color = cogl_color_out.rgb;
+        vec3 color = vec3(red * cogl_color_out.a, green * cogl_color_out.a, blue * cogl_color_out.a);
+        vec3 finalColor = mix(pix_color, color, blend * 0.75);
+        cogl_color_out = vec4(finalColor, cogl_color_out.a);
+        `
+      );
     }
 
     get red() {
@@ -128,7 +149,11 @@ export const BlurEffect = GObject.registerClass(
     }
 
     vfunc_paint_target(paint_node = null, paint_context = null) {
-      this.set_uniform_value('tex', 0);
+      if (typeof this.set_uniform_value === 'function') {
+        try {
+          this.set_uniform_value('tex', 0);
+        } catch (e) {}
+      }
 
       if (paint_node && paint_context)
         super.vfunc_paint_target(paint_node, paint_context);

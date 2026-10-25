@@ -69,6 +69,11 @@ export default class SearchLightExt extends Extension {
     this._loTimer = new Timer('lo-res timer');
     this._loTimer.initialize(750);
 
+    this.accel = new KeyboardShortcuts();
+    this.accel.enable();
+    this.accel2 = new KeyboardShortcuts();
+    this.accel2.enable();
+
     this._settings = this.getSettings(schemaId);
     this._settingsKeys = SettingsKeys();
 
@@ -155,11 +160,6 @@ export default class SearchLightExt extends Extension {
     this.mainContainer.add_child(this.container);
 
     this._setupBackground();
-
-    this.accel = new KeyboardShortcuts();
-    this.accel.enable();
-    this.accel2 = new KeyboardShortcuts();
-    this.accel2.enable();
 
     this._updateShortcut();
     this._updateShortcut2();
@@ -337,14 +337,16 @@ export default class SearchLightExt extends Extension {
   }
 
   _updateWindowEffect() {
-    // this.window_effect = 2;
-    // this.window_effect_color = [1, 0, 0, 0.5];
     this.container.remove_effect_by_name('window-effect');
-    let effect = this._createEffect(this.window_effect);
-    if (effect) {
-      this.container.add_effect_with_name('window-effect', effect);
+    try {
+      let effect = this._createEffect(this.window_effect);
+      if (effect) {
+        this.container.add_effect_with_name('window-effect', effect);
+      }
+      this.windowEffect = effect;
+    } catch (err) {
+      console.warn(`[search-light] Could not create window effect: ${err}`);
     }
-    this.windowEffect = effect;
   }
 
   _updatePanelIcon(disable) {}
@@ -399,7 +401,11 @@ export default class SearchLightExt extends Extension {
     // });
 
     if (!this._blurEffect) {
-      this._blurEffect = this._createEffect(1);
+      try {
+        this._blurEffect = this._createEffect(1);
+      } catch (err) {
+        console.warn(`[search-light] Could not create blur effect: ${err}`);
+      }
     }
 
     let background = new St.Widget({
@@ -600,7 +606,9 @@ export default class SearchLightExt extends Extension {
   }
 
   _updateShortcut(disable) {
-    this.accel.unlisten();
+    if (this.accel) {
+      this.accel.unlisten();
+    }
 
     let shortcut = '';
     try {
@@ -612,13 +620,15 @@ export default class SearchLightExt extends Extension {
       shortcut = '<Control><Super>Space';
     }
 
-    if (!disable) {
+    if (!disable && this.accel) {
       this.accel.listenFor(shortcut, this._toggle_search_light.bind(this));
     }
   }
 
   _updateShortcut2(disable) {
-    this.accel2.unlisten();
+    if (this.accel2) {
+      this.accel2.unlisten();
+    }
 
     let shortcut = '';
     try {
@@ -627,10 +637,10 @@ export default class SearchLightExt extends Extension {
       //
     }
     if (shortcut == '') {
-      shortcut = '<Control><Super>Space';
+      return;
     }
 
-    if (!disable) {
+    if (!disable && this.accel2) {
       this.accel2.listenFor(shortcut, this._toggle_search_light.bind(this));
     }
   }
@@ -802,7 +812,9 @@ export default class SearchLightExt extends Extension {
     this._background.remove_effect_by_name('blur');
     if (this._blurEffect && this.blur_background) {
       this._background.add_effect_with_name('blur', this._blurEffect);
-      this._blurEffect.color = bg;
+      if ('color' in this._blurEffect) {
+        this._blurEffect.color = bg;
+      }
     }
 
     this._background.visible = true;

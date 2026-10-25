@@ -44,9 +44,12 @@ export const KeyboardShortcuts = class {
   unlisten() {
     if (this._grabbers) {
       Object.keys(this._grabbers).forEach((k) => {
-        Main.wm.removeKeybinding(this._grabbers[k].name, Shell.ActionMode.ALL);
-        // what the post in stackoverflow doesn't show is proper clean.. ungrab!
-        global.display.ungrab_accelerator(k);
+        try {
+          Main.wm.removeKeybinding(this._grabbers[k].name);
+        } catch (e) {}
+        try {
+          global.display.ungrab_accelerator(parseInt(k, 10));
+        } catch (e) {}
       });
     }
     this._grabbers = {};
