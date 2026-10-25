@@ -169,9 +169,9 @@ export default class SearchLightExt extends Extension {
     this._animationSpeed = this._settings.get_double('animation-speed');
 
     Main.overview.connectObject(
-      'overview-showing',
+      'showing',
       this._onOverviewShowing.bind(this),
-      'overview-hidden',
+      'hidden',
       this._onOverviewHidden.bind(this),
       this,
     );
@@ -179,16 +179,6 @@ export default class SearchLightExt extends Extension {
     Shell.AppSystem.get_default().connectObject(
       'app-state-changed',
       this._onAppStateChanged.bind(this),
-      this,
-    );
-
-    global.display.connectObject(
-      'window-created',
-      (display, win) => {
-        if (this._visible) {
-          this.mainContainer.opacity = 0;
-        }
-      },
       this,
     );
 
@@ -221,6 +211,11 @@ export default class SearchLightExt extends Extension {
   }
 
   disable() {
+    this._release_ui();
+    this._remove_events();
+    Main.overview.disconnectObject(this);
+    Shell.AppSystem.get_default().disconnectObject(this);
+
     this._hiTimer?.shutdown();
     this._loTimer?.shutdown();
     this._hiTimer = null;
@@ -931,6 +926,12 @@ export default class SearchLightExt extends Extension {
     );
 
     global.display.connectObject(
+      'window-created',
+      (display, win) => {
+        if (this._visible) {
+          this.mainContainer.opacity = 0;
+        }
+      },
       'notify::focus-window',
       this._onFocusWindow.bind(this),
       'in-fullscreen-changed',
@@ -942,8 +943,6 @@ export default class SearchLightExt extends Extension {
   _remove_events() {
     global.display.disconnectObject(this);
     global.stage.disconnectObject(this);
-    Main.overview.disconnectObject(this);
-    Shell.AppSystem.get_default().disconnectObject(this);
   }
 
   _onOverviewShowing() {

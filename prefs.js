@@ -1,7 +1,7 @@
 // loosely based on JustPerfection & Blur-My-Shell
 
-import Gdk from 'gi://Gdk';
-import Gtk from 'gi://Gtk';
+import Gdk from 'gi://Gdk?version=4.0';
+import Gtk from 'gi://Gtk?version=4.0';
 import Gio from 'gi://Gio';
 
 import { ShortcutSettingWidget } from './shortcuts.js';

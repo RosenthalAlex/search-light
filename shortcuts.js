@@ -1,7 +1,7 @@
 // https://github.com/eonpatapon/gnome-shell-extension-caffeine
 
-import Gdk from 'gi://Gdk';
-import Gtk from 'gi://Gtk';
+import Gdk from 'gi://Gdk?version=4.0';
+import Gtk from 'gi://Gtk?version=4.0';
 import GObject from 'gi://GObject';
 
 const genParam = (type, name, ...dflt) =>

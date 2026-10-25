@@ -5,9 +5,10 @@ all: build install lint
 build:
 	glib-compile-schemas --strict --targetdir=schemas/ schemas
 
-install:
+install: build
 	mkdir -p ~/.local/share/gnome-shell/extensions/search-light@icedman.github.com/
 	cp -R ./* ~/.local/share/gnome-shell/extensions/search-light@icedman.github.com/
+	glib-compile-schemas ~/.local/share/gnome-shell/extensions/search-light@icedman.github.com/schemas
 
 publish:
 	rm -rf build
